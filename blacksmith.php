@@ -6,8 +6,21 @@
  * 
  * @return bool
  */
-
-
+    session_start();
+    function createGameData () {
+    $_SESSION['blacksmith'] = [
+      'response' => [],
+      'gold' => 15,
+      'wood' => 0,
+      'ore' => 0,
+      'sword' => 0,
+      'axe' => 0,
+      'staff' => 0,
+      'fire' => false
+    ];
+    
+    return isset($_SESSION['blacksmith']);
+    }
 /**
  * getResponse
  * Gets the response history array from the session and converts to a string
@@ -43,7 +56,22 @@ function updateResponse ($response) {
  * 
  * @return string
  */
-
+function fire () {
+  if ($_SESSION['blacksmith']['fire']) {
+    // turn off fire
+    $_SESSION['blacksmith']['fire'] = false;
+    return 'Fire has been put out.';
+  } else {
+    // turn on fire
+    if ($_SESSION['blacksmith']['wood'] > 0) {
+      $_SESSION['blacksmith']['wood'] --;
+      $_SESSION['blacksmith']['fire'] = true;
+      return "Fire has been started.";
+    } else {
+      return "You do not have enough wood.";
+    }
+  }
+}
 
 /**
  * buy
@@ -53,6 +81,27 @@ function updateResponse ($response) {
  * @param [string] $item
  * @return string
  */
+function buy ($item) {
+  // check if an item has been provided
+    // check if it is valid item
+      // check if player has enough gold
+
+  if (isset($item)) {
+    if (isset(SETTING[$item])) {
+      if ($_SESSION['blacksmith']['gold'] >= SETTINGS[$item]['gold']) {
+        $_SESSION['blacksmith'][$item]++;
+        $_SESSION['blacksmith']['gold'] -= SETTINGS[$item]['gold'];
+        return "You have bought 1 piece of {$item}.";
+      } else {
+        return "You do not have enough gold.";
+      }
+    } else {
+      return "You cannot buy a {$item}.";
+    }
+  } else {
+    return "You must provide an item to buy.";
+  }
+}
 
 
 /**
@@ -118,4 +167,19 @@ function help () {
  *    - else
  *      - updateResponse with invalid command  
  */
-
+if (isset($_POST['command'])) {
+  $command = explode(' ', $_POST['command']);
+  if (function_exists($command[0])) {
+    //execute the function
+    //check if an option was provided
+    if (isset($command[1])) {
+      $response = $command[0]($command[1]);
+      updateResponse($response);
+    } else {
+      $response = $command[0]();
+      updateResponse($response);
+    }
+  } else {   //if it doesnt exist, do this
+    updateResponse("{$_POST['command']} is not a valid command.");
+  } 
+}
